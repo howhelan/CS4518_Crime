@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.media.FaceDetector;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,8 +28,22 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.util.Log;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+
+import com.google.android.gms.vision.Frame;
 
 
+import com.google.android.gms.vision.Detector;
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.Landmark;
+import com.google.android.gms.vision.face.FaceDetector;
+
+
+
+import android.util.SparseArray;
 
 
 import java.io.File;
@@ -61,6 +75,8 @@ public class CrimeFragment extends Fragment {
     private ImageView altPhotoView2;
     private ImageView altPhotoView3;
 
+
+
     private int index = 0;
 
     public static CrimeFragment newInstance(UUID crimeId) {
@@ -75,7 +91,8 @@ public class CrimeFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
-        //FaceDetector detector = new FaceDetector();
+
+
 
 
         super.onCreate(savedInstanceState);
@@ -85,6 +102,8 @@ public class CrimeFragment extends Fragment {
         altPhotoFile1 = CrimeLab.get(getActivity()).getAltPhotoFile(mCrime, 1);
         altPhotoFile2 = CrimeLab.get(getActivity()).getAltPhotoFile(mCrime, 2);
         altPhotoFile3 = CrimeLab.get(getActivity()).getAltPhotoFile(mCrime, 3);
+
+
 
     }
 
@@ -119,6 +138,10 @@ public class CrimeFragment extends Fragment {
 
             }
         });
+
+
+
+
 
         mDateButton = (Button) v.findViewById(R.id.crime_date);
         updateDate();
@@ -218,7 +241,54 @@ public class CrimeFragment extends Fragment {
         altPhotoView1 = (ImageView) v.findViewById(R.id.imageView2);
         altPhotoView2 = (ImageView) v.findViewById(R.id.imageView3);
         altPhotoView3 = (ImageView) v.findViewById(R.id.imageView4);
+
+
+        Bitmap bitmap1 = ((BitmapDrawable)mPhotoView.getDrawable()).getBitmap();
+        //Bitmap bitmap1 = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+        Canvas canvas1 = new Canvas(bitmap1);
+        Paint paint1 = new Paint();
+        paint1.setColor(Color.BLUE);
+        canvas1.drawCircle(100, 100, 100, paint1);
+        //mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), bitmap1));
+        mPhotoView.setImageBitmap(bitmap1);
+
+        FaceDetector detector = new FaceDetector.Builder(getContext())
+                .setTrackingEnabled(false)
+                .setLandmarkType(com.google.android.gms.vision.face.FaceDetector.ALL_LANDMARKS)
+                .build();
+
+
+
+        if (!detector.isOperational()) {
+            //Handle contingency
+        } else {
+            Bitmap bitmap = mPhotoView.getDrawingCache();
+            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
+
+            SparseArray<Face> faces = detector.detect(frame);
+
+            Canvas canvas = new Canvas(bitmap);
+            Paint paint = new Paint();
+            paint.setColor(Color.BLUE);
+
+            for (int i = 0; i < faces.size(); ++i) {
+                Face face = faces.valueAt(i);
+                for (Landmark landmark : face.getLandmarks()) {
+                    int cx = (int) (landmark.getPosition().x * 1);
+                    int cy = (int) (landmark.getPosition().y * 1);
+                    canvas.drawCircle(cx, cy, 10, paint);
+                }
+            }
+
+
+            detector.release();
+        }
+
+
+
         updatePhotoView();
+
+
 
         return v;
     }
