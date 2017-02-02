@@ -242,15 +242,18 @@ public class CrimeFragment extends Fragment {
         altPhotoView2 = (ImageView) v.findViewById(R.id.imageView3);
         altPhotoView3 = (ImageView) v.findViewById(R.id.imageView4);
 
+        updatePhotoView();
 
-        Bitmap bitmap1 = ((BitmapDrawable)mPhotoView.getDrawable()).getBitmap();
-        //Bitmap bitmap1 = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
-        Canvas canvas1 = new Canvas(bitmap1);
+        //this commented code shows the canvas drawing on the first photo in the top left
+/*
+        Bitmap workingBitmap = ((BitmapDrawable)mPhotoView.getDrawable()).getBitmap();
+        Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas1 = new Canvas(mutableBitmap);
         Paint paint1 = new Paint();
         paint1.setColor(Color.BLUE);
-        canvas1.drawCircle(100, 100, 100, paint1);
-        //mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), bitmap1));
-        mPhotoView.setImageBitmap(bitmap1);
+        canvas1.drawCircle(10, 10, 100, paint1);
+        mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
+*/
 
         FaceDetector detector = new FaceDetector.Builder(getContext())
                 .setTrackingEnabled(false)
@@ -262,14 +265,18 @@ public class CrimeFragment extends Fragment {
         if (!detector.isOperational()) {
             //Handle contingency
         } else {
-            Bitmap bitmap = mPhotoView.getDrawingCache();
-            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
+            Bitmap workingBitmap = ((BitmapDrawable)mPhotoView.getDrawable()).getBitmap();
+            Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
+
+            Frame frame = new Frame.Builder().setBitmap(workingBitmap).build();
 
             SparseArray<Face> faces = detector.detect(frame);
 
-            Canvas canvas = new Canvas(bitmap);
+            Canvas canvas = new Canvas(mutableBitmap);
             Paint paint = new Paint();
             paint.setColor(Color.BLUE);
+
+            System.out.println("FACES FOUND: " + faces.size());
 
             for (int i = 0; i < faces.size(); ++i) {
                 Face face = faces.valueAt(i);
@@ -280,15 +287,11 @@ public class CrimeFragment extends Fragment {
                 }
             }
 
+            mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
+
 
             detector.release();
         }
-
-
-
-        updatePhotoView();
-
-
 
         return v;
     }
