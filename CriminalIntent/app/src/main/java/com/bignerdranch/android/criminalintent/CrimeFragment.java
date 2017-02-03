@@ -75,8 +75,7 @@ public class CrimeFragment extends Fragment {
     private ImageView altPhotoView2;
     private ImageView altPhotoView3;
 
-
-
+    //stores the ImageView at which the next picture should be place.  0 = mPhotoView, 1 = altPhotoView1...
     private int index = 0;
 
     public static CrimeFragment newInstance(UUID crimeId) {
@@ -92,9 +91,6 @@ public class CrimeFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
 
 
-
-
-
         super.onCreate(savedInstanceState);
         UUID crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
@@ -102,8 +98,6 @@ public class CrimeFragment extends Fragment {
         altPhotoFile1 = CrimeLab.get(getActivity()).getAltPhotoFile(mCrime, 1);
         altPhotoFile2 = CrimeLab.get(getActivity()).getAltPhotoFile(mCrime, 2);
         altPhotoFile3 = CrimeLab.get(getActivity()).getAltPhotoFile(mCrime, 3);
-
-
 
     }
 
@@ -220,10 +214,6 @@ public class CrimeFragment extends Fragment {
                 Uri uri = Uri.fromFile(mPhotoFile);
                 if( index > 3){
                     index = 0;
-                }
-
-                if(index == 0) {
-
                 }else if(index == 1){
                     uri = Uri.fromFile(altPhotoFile1);
                 }else if(index == 2){
@@ -241,6 +231,41 @@ public class CrimeFragment extends Fragment {
         altPhotoView1 = (ImageView) v.findViewById(R.id.imageView2);
         altPhotoView2 = (ImageView) v.findViewById(R.id.imageView3);
         altPhotoView3 = (ImageView) v.findViewById(R.id.imageView4);
+
+        Bitmap bitmap;
+        boolean loopBackTo0 = (index == 3);
+        bitmap = PictureUtils.getScaledBitmap(
+                altPhotoFile3.getPath(), getActivity());
+
+
+        if( bitmap != null){
+            altPhotoView3.setImageBitmap(bitmap);
+            index = 3;
+        }
+
+        bitmap = PictureUtils.getScaledBitmap(
+                altPhotoFile2.getPath(), getActivity());
+
+        if( bitmap != null){
+            altPhotoView2.setImageBitmap(bitmap);
+            index = 2;
+        }
+
+        bitmap = PictureUtils.getScaledBitmap(
+                altPhotoFile1.getPath(), getActivity());
+
+        if( bitmap != null){
+            altPhotoView1.setImageBitmap(bitmap);
+            index = 1;
+        }
+
+        bitmap = PictureUtils.getScaledBitmap(
+                mPhotoFile.getPath(), getActivity());
+
+        if( bitmap != null){
+            mPhotoView.setImageBitmap(bitmap);
+            index = 0;
+        }
 
         updatePhotoView();
 
@@ -265,31 +290,34 @@ public class CrimeFragment extends Fragment {
         if (!detector.isOperational()) {
             //Handle contingency
         } else {
-            Bitmap workingBitmap = ((BitmapDrawable)mPhotoView.getDrawable()).getBitmap();
-            Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
+            BitmapDrawable bd = (BitmapDrawable)mPhotoView.getDrawable();
 
-            Frame frame = new Frame.Builder().setBitmap(workingBitmap).build();
+            if(bd != null) {
+                Bitmap workingBitmap = bd.getBitmap();
+                Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
 
-            SparseArray<Face> faces = detector.detect(frame);
+                Frame frame = new Frame.Builder().setBitmap(workingBitmap).build();
 
-            Canvas canvas = new Canvas(mutableBitmap);
-            Paint paint = new Paint();
-            paint.setColor(Color.BLUE);
+                SparseArray<Face> faces = detector.detect(frame);
 
-            System.out.println("FACES FOUND: " + faces.size());
+                Canvas canvas = new Canvas(mutableBitmap);
+                Paint paint = new Paint();
+                paint.setColor(Color.BLUE);
 
-            for (int i = 0; i < faces.size(); ++i) {
-                Face face = faces.valueAt(i);
-                for (Landmark landmark : face.getLandmarks()) {
-                    int cx = (int) (landmark.getPosition().x * 1);
-                    int cy = (int) (landmark.getPosition().y * 1);
-                    canvas.drawCircle(cx, cy, 10, paint);
+                System.out.println("FACES FOUND: " + faces.size());
+
+                for (int i = 0; i < faces.size(); ++i) {
+                    Face face = faces.valueAt(i);
+                    for (Landmark landmark : face.getLandmarks()) {
+                        int cx = (int) (landmark.getPosition().x * 1);
+                        int cy = (int) (landmark.getPosition().y * 1);
+                        canvas.drawCircle(cx, cy, 10, paint);
+                    }
                 }
+
+                mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
+
             }
-
-            mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
-
-
             detector.release();
         }
 
@@ -369,10 +397,10 @@ public class CrimeFragment extends Fragment {
 
     private void updatePhotoView() {
         Bitmap bitmap;
+        boolean loopBackTo0 = (index == 3);
 
         if (altPhotoFile3 == null || !altPhotoFile3.exists()) {
             altPhotoView3.setImageDrawable(null);
-            index = 3;
         }else{
             bitmap = PictureUtils.getScaledBitmap(
                 altPhotoFile3.getPath(), getActivity());
@@ -381,7 +409,6 @@ public class CrimeFragment extends Fragment {
 
         if (altPhotoFile2 == null || !altPhotoFile2.exists()) {
             altPhotoView3.setImageDrawable(null);
-            index = 2;
         }else {
             bitmap = PictureUtils.getScaledBitmap(
                     altPhotoFile2.getPath(), getActivity());
@@ -390,7 +417,6 @@ public class CrimeFragment extends Fragment {
 
         if (altPhotoFile1 == null || !altPhotoFile1.exists()) {
             mPhotoView.setImageDrawable(null);
-            index = 1;
         }else {
             bitmap = PictureUtils.getScaledBitmap(
                     altPhotoFile1.getPath(), getActivity());
@@ -399,7 +425,6 @@ public class CrimeFragment extends Fragment {
 
         if (mPhotoFile == null || !mPhotoFile.exists()) {
             mPhotoView.setImageDrawable(null);
-            index = 0;
         } else {
             bitmap = PictureUtils.getScaledBitmap(
                     mPhotoFile.getPath(), getActivity());
