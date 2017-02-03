@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
@@ -40,10 +41,11 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.Landmark;
 import com.google.android.gms.vision.face.FaceDetector;
-
+import com.google.android.gms.vision.text.Text;
 
 
 import android.util.SparseArray;
+import android.widget.TextView;
 
 
 import java.io.File;
@@ -74,6 +76,9 @@ public class CrimeFragment extends Fragment {
     private ImageView altPhotoView1;
     private ImageView altPhotoView2;
     private ImageView altPhotoView3;
+    private CheckBox detectionCheckbox;
+    private TextView faceNum;
+    private View v;
 
     //stores the ImageView at which the next picture should be place.  0 = mPhotoView, 1 = altPhotoView1...
     private int index = 0;
@@ -99,6 +104,8 @@ public class CrimeFragment extends Fragment {
         altPhotoFile2 = CrimeLab.get(getActivity()).getAltPhotoFile(mCrime, 2);
         altPhotoFile3 = CrimeLab.get(getActivity()).getAltPhotoFile(mCrime, 3);
 
+
+
     }
 
     @Override
@@ -112,7 +119,7 @@ public class CrimeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_crime, container, false);
+        v = inflater.inflate(R.layout.fragment_crime, container, false);
 
         mTitleField = (EditText) v.findViewById(R.id.crime_title);
         mTitleField.setText(mCrime.getTitle());
@@ -203,8 +210,8 @@ public class CrimeFragment extends Fragment {
 
 
         if (canTakePhoto && mPhotoFile == null) {
-                Uri uri = Uri.fromFile(mPhotoFile);
-                captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+            Uri uri = Uri.fromFile(mPhotoFile);
+            captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
         }
 
 
@@ -280,47 +287,61 @@ public class CrimeFragment extends Fragment {
         mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
 */
 
-        FaceDetector detector = new FaceDetector.Builder(getContext())
+
+
+/*        detectionCheckbox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mCrime.setSolved(isChecked);
+            }
+        });*/
+
+        /*FaceDetector detector = new FaceDetector.Builder(getContext())
                 .setTrackingEnabled(false)
                 .setLandmarkType(com.google.android.gms.vision.face.FaceDetector.ALL_LANDMARKS)
                 .build();
+        if (checked == 1) {
+                System.out.println("checked");
+                detector = new FaceDetector.Builder(getContext())
+                    .setTrackingEnabled(true)
+                    .setLandmarkType(com.google.android.gms.vision.face.FaceDetector.ALL_LANDMARKS)
+                    .build();
+        }
+*/
 
-
-
-        if (!detector.isOperational()) {
+       /* if (!detector.isOperational()) {
             //Handle contingency
         } else {
             BitmapDrawable bd = (BitmapDrawable)mPhotoView.getDrawable();
-
             if(bd != null) {
                 Bitmap workingBitmap = bd.getBitmap();
                 Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
-
                 Frame frame = new Frame.Builder().setBitmap(workingBitmap).build();
-
                 SparseArray<Face> faces = detector.detect(frame);
-
                 Canvas canvas = new Canvas(mutableBitmap);
                 Paint paint = new Paint();
                 paint.setColor(Color.BLUE);
-
                 System.out.println("FACES FOUND: " + faces.size());
-
                 for (int i = 0; i < faces.size(); ++i) {
                     Face face = faces.valueAt(i);
                     for (Landmark landmark : face.getLandmarks()) {
                         int cx = (int) (landmark.getPosition().x * 1);
                         int cy = (int) (landmark.getPosition().y * 1);
-                        canvas.drawCircle(cx, cy, 10, paint);
+                        //canvas.drawCircle(cx, cy, 10, paint);
+                        canvas.drawRect(cx, cy, cx + 10, cy + 10, paint );
                     }
                 }
-
+                countFace = faces.size();
+                if (checked == 0) {
+                    faceNum.setText("The checkbox hasn't been checked");
+                } else {
+                    faceNum.setText(countFace + " faces detected");
+                }
                 mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
-
             }
             detector.release();
         }
-
+*/
         return v;
     }
 
@@ -367,6 +388,64 @@ public class CrimeFragment extends Fragment {
             }
         } else if (requestCode == REQUEST_PHOTO) {
             updatePhotoView();
+
+
+
+            detectionCheckbox = (CheckBox) v.findViewById(R.id.detectionEnable);
+            faceNum = (TextView) v.findViewById(R.id.faceDetected);
+
+            detectionCheckbox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    boolean checked = ((CheckBox) view).isChecked();
+                    BitmapDrawable bd = (BitmapDrawable)mPhotoView.getDrawable();
+                    if( index == 1){
+                        bd = (BitmapDrawable)altPhotoView1.getDrawable();
+                    }else if( index == 2){
+                        bd = (BitmapDrawable)altPhotoView2.getDrawable();
+                    } else if( index == 3){
+                        bd = (BitmapDrawable)altPhotoView3.getDrawable();
+                    }
+                    FaceDetector detector = new FaceDetector.Builder(getContext())
+                            .setTrackingEnabled(false)
+                            .setLandmarkType(com.google.android.gms.vision.face.FaceDetector.ALL_LANDMARKS)
+                            .build();
+
+                    if (checked) {
+                        if(bd != null) {
+                            Bitmap workingBitmap = bd.getBitmap();
+                            Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
+
+                            Frame frame = new Frame.Builder().setBitmap(workingBitmap).build();
+
+                            SparseArray<Face> faces = detector.detect(frame);
+
+                            Canvas canvas = new Canvas(mutableBitmap);
+                            Paint paint = new Paint();
+                            paint.setColor(Color.BLUE);
+
+                            System.out.println("FACES FOUND: " + faces.size());
+                            faceNum.setText(faces.size() + " faces detected");
+
+                            for (int i = 0; i < faces.size(); ++i) {
+                                Face face = faces.valueAt(i);
+                                for (Landmark landmark : face.getLandmarks()) {
+                                    int cx = (int) (landmark.getPosition().x * 1);
+                                    int cy = (int) (landmark.getPosition().y * 1);
+                                    //canvas.drawCircle(cx, cy, 10, paint);
+                                    canvas.drawRect(cx, cy, cx + 10, cy + 10, paint );
+                                }
+                            }
+                            mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
+                        }else {
+                            faceNum.setText("The checkbox hasn't been checked");
+                        }
+                    } else {
+                        detector.release();
+                        faceNum.setText("");
+                    }
+                }
+            });
             index++;
         }
     }
@@ -403,7 +482,7 @@ public class CrimeFragment extends Fragment {
             altPhotoView3.setImageDrawable(null);
         }else{
             bitmap = PictureUtils.getScaledBitmap(
-                altPhotoFile3.getPath(), getActivity());
+                    altPhotoFile3.getPath(), getActivity());
             altPhotoView3.setImageBitmap(bitmap);
         }
 

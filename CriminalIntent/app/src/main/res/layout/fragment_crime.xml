@@ -53,7 +53,7 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="150dp">
+        android:layout_height="115dp">
 
         <ImageView
             android:layout_width="100dp"
@@ -83,6 +83,25 @@
             android:layout_weight="1"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="20dp">
+        <CheckBox
+            android:text="Enable Face Detection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/detectionEnable"
+            android:layout_weight="1" />
+
+        <TextView
+            android:text=""
+            android:layout_width="117dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/faceDetected" />
     </LinearLayout>
 
 </LinearLayout>
