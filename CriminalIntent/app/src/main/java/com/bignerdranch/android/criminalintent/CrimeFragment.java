@@ -275,73 +275,7 @@ public class CrimeFragment extends Fragment {
         }
 
         updatePhotoView();
-
-        //this commented code shows the canvas drawing on the first photo in the top left
-/*
-        Bitmap workingBitmap = ((BitmapDrawable)mPhotoView.getDrawable()).getBitmap();
-        Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
-        Canvas canvas1 = new Canvas(mutableBitmap);
-        Paint paint1 = new Paint();
-        paint1.setColor(Color.BLUE);
-        canvas1.drawCircle(10, 10, 100, paint1);
-        mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
-*/
-
-
-
-/*        detectionCheckbox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mCrime.setSolved(isChecked);
-            }
-        });*/
-
-        /*FaceDetector detector = new FaceDetector.Builder(getContext())
-                .setTrackingEnabled(false)
-                .setLandmarkType(com.google.android.gms.vision.face.FaceDetector.ALL_LANDMARKS)
-                .build();
-        if (checked == 1) {
-                System.out.println("checked");
-                detector = new FaceDetector.Builder(getContext())
-                    .setTrackingEnabled(true)
-                    .setLandmarkType(com.google.android.gms.vision.face.FaceDetector.ALL_LANDMARKS)
-                    .build();
-        }
-*/
-
-       /* if (!detector.isOperational()) {
-            //Handle contingency
-        } else {
-            BitmapDrawable bd = (BitmapDrawable)mPhotoView.getDrawable();
-            if(bd != null) {
-                Bitmap workingBitmap = bd.getBitmap();
-                Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
-                Frame frame = new Frame.Builder().setBitmap(workingBitmap).build();
-                SparseArray<Face> faces = detector.detect(frame);
-                Canvas canvas = new Canvas(mutableBitmap);
-                Paint paint = new Paint();
-                paint.setColor(Color.BLUE);
-                System.out.println("FACES FOUND: " + faces.size());
-                for (int i = 0; i < faces.size(); ++i) {
-                    Face face = faces.valueAt(i);
-                    for (Landmark landmark : face.getLandmarks()) {
-                        int cx = (int) (landmark.getPosition().x * 1);
-                        int cy = (int) (landmark.getPosition().y * 1);
-                        //canvas.drawCircle(cx, cy, 10, paint);
-                        canvas.drawRect(cx, cy, cx + 10, cy + 10, paint );
-                    }
-                }
-                countFace = faces.size();
-                if (checked == 0) {
-                    faceNum.setText("The checkbox hasn't been checked");
-                } else {
-                    faceNum.setText(countFace + " faces detected");
-                }
-                mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
-            }
-            detector.release();
-        }
-*/
+        
         return v;
     }
 
@@ -394,58 +328,55 @@ public class CrimeFragment extends Fragment {
             detectionCheckbox = (CheckBox) v.findViewById(R.id.detectionEnable);
             faceNum = (TextView) v.findViewById(R.id.faceDetected);
 
-            detectionCheckbox.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    boolean checked = ((CheckBox) view).isChecked();
-                    BitmapDrawable bd = (BitmapDrawable)mPhotoView.getDrawable();
-                    if( index == 1){
-                        bd = (BitmapDrawable)altPhotoView1.getDrawable();
-                    }else if( index == 2){
-                        bd = (BitmapDrawable)altPhotoView2.getDrawable();
-                    } else if( index == 3){
-                        bd = (BitmapDrawable)altPhotoView3.getDrawable();
-                    }
-                    FaceDetector detector = new FaceDetector.Builder(getContext())
-                            .setTrackingEnabled(false)
-                            .setLandmarkType(com.google.android.gms.vision.face.FaceDetector.ALL_LANDMARKS)
-                            .build();
+            boolean checked = detectionCheckbox.isChecked();
+            BitmapDrawable bd = (BitmapDrawable)altPhotoView3.getDrawable();
+            if( index == 1){
+                bd = (BitmapDrawable)mPhotoView.getDrawable();
+            }else if( index == 2){
+                bd = (BitmapDrawable)altPhotoView1.getDrawable();
+            } else if( index == 3){
+                bd = (BitmapDrawable)altPhotoView2.getDrawable();
+            }
+            FaceDetector detector = new FaceDetector.Builder(getContext())
+                    .setTrackingEnabled(false)
+                    .setLandmarkType(com.google.android.gms.vision.face.FaceDetector.ALL_LANDMARKS)
+                    .build();
 
-                    if (checked) {
-                        if(bd != null) {
-                            Bitmap workingBitmap = bd.getBitmap();
-                            Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
+            System.out.println("Index is now: " + index);
+            if (bd == null){
+                System.out.println("But bd is null!!!!");
+            }
 
-                            Frame frame = new Frame.Builder().setBitmap(workingBitmap).build();
+            if (checked) {
+                if(bd != null) {
+                    Bitmap workingBitmap = bd.getBitmap();
+                    Bitmap mutableBitmap = workingBitmap.copy(Bitmap.Config.ARGB_8888, true);
 
-                            SparseArray<Face> faces = detector.detect(frame);
+                    Frame frame = new Frame.Builder().setBitmap(mutableBitmap).build();
 
-                            Canvas canvas = new Canvas(mutableBitmap);
-                            Paint paint = new Paint();
-                            paint.setColor(Color.BLUE);
+                    SparseArray<Face> faces = detector.detect(frame);
 
-                            System.out.println("FACES FOUND: " + faces.size());
-                            faceNum.setText(faces.size() + " faces detected");
+                    Canvas canvas = new Canvas(mutableBitmap);
+                    Paint paint = new Paint();
+                    paint.setColor(Color.BLUE);
 
-                            for (int i = 0; i < faces.size(); ++i) {
-                                Face face = faces.valueAt(i);
-                                for (Landmark landmark : face.getLandmarks()) {
-                                    int cx = (int) (landmark.getPosition().x * 1);
-                                    int cy = (int) (landmark.getPosition().y * 1);
-                                    //canvas.drawCircle(cx, cy, 10, paint);
-                                    canvas.drawRect(cx, cy, cx + 10, cy + 10, paint );
-                                }
-                            }
-                            mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
-                        }else {
-                            faceNum.setText("The checkbox hasn't been checked");
+                    faceNum.setText(faces.size() + " faces detected");
+
+                    for (int i = 0; i < faces.size(); ++i) {
+                        Face face = faces.valueAt(i);
+                        for (Landmark landmark : face.getLandmarks()) {
+                            int cx = (int) (landmark.getPosition().x * 1);
+                            int cy = (int) (landmark.getPosition().y * 1);
+                            //canvas.drawCircle(cx, cy, 10, paint);
+                            canvas.drawRect(cx, cy, cx + 10, cy + 10, paint );
                         }
-                    } else {
-                        detector.release();
-                        faceNum.setText("");
                     }
+                    mPhotoView.setImageDrawable(new BitmapDrawable(getResources(), mutableBitmap));
                 }
-            });
+            } else {
+                detector.release();
+                faceNum.setText("");
+            }
             index++;
         }
     }
